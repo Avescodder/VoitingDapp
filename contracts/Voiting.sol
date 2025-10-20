@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 contract VoitingLogic {
 
     event StatusChanged(VoitingStatus newStatus, address whoChanged);
-    event Voted(address voter, address candidate, uint newVoteCount);
+    event Voted(address voter, address candidate, uint256 newVoteCount);
     event CandidateRegistered(address candidateAddress, string name);
     event AdminRegistered(address adminAddress);
 
@@ -19,7 +19,7 @@ contract VoitingLogic {
         address userAddress;
         bool userCandidate;
         bool userAdmin;
-        uint voicesCount;
+        uint256 voicesCount;
     }
 
     VoitingStatus public currentStatus;
@@ -28,7 +28,7 @@ contract VoitingLogic {
 
     address[] public candidates;
     address public curretnLider;
-    uint public maxVotes;
+    uint256 public maxVotes;
 
     modifier onlyAdmin() {
         require(users[msg.sender].userAdmin, "Not admin");
@@ -86,17 +86,17 @@ contract VoitingLogic {
 
     function getAllResults() external view onlyAdmin returns (User[] memory) {
         User[] memory results = new User[](candidates.length);
-        for (uint i = 0; i < candidates.length; i++) {
+        for (uint256 i = 0; i < candidates.length; i++) {
             results[i] = users[candidates[i]];
         }
         return results;
     }
 
-    function getCandidateLength() external view returns (uint) {
+    function getCandidateLength() external view returns (uint256) {
         return candidates.length;
     }
 
-    function getCandidateAddress(uint _index) external view returns (address) {
+    function getCandidateAddress(uint256 _index) external view returns (address) {
         require(_index < candidates.length, "Index out of range");
         return candidates[_index];
     }
