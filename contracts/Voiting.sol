@@ -74,5 +74,35 @@ contract VoitingLogic {
         emit Voted(msg.sender, _candidate, users[_candidate].voicesCount);
     }
 
+    function getWinner() external view returns (User memory) {
+        require(curretnLider != address(0), "No votes yet");
+        return users[curretnLider];
+    }
 
+    function getCandidate(address _candidate) external view returns (User memory) {
+        require(users[_candidate].userCandidate, "User not a candidate");
+        return users[_candidate];
+    }
+
+    function getAllResults() external view onlyAdmin returns (User[] memory) {
+        User[] memory results = new User[](candidates.length);
+        for (uint i = 0; i < candidates.length; i++) {
+            results[i] = users[candidates[i]];
+        }
+        return results;
+    }
+
+    function getCandidateLength() external view returns (uint) {
+        return candidates.length;
+    }
+
+    function getCandidateAddress(uint _index) external view returns (address) {
+        require(_index < candidates.length, "Index out of range");
+        return candidates[_index];
+    }
+
+    function hasVoited(address _user) external view returns (bool) {
+        return isVoited[_user];
+    }
+    
 }
