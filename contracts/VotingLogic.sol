@@ -1,56 +1,61 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract VoitingLogic {
+contract VotingLogic {
 
-    event StatusChanged(VoitingStatus newStatus, address whoChanged);
+    // 1️⃣ EVENTS
+    event StatusChanged(VotingStatus newStatus, address whoChanged);
     event Voted(address voter, address candidate, uint256 newVoteCount);
     event CandidateRegistered(address candidateAddress, string name);
     event AdminRegistered(address adminAddress);
 
-    enum VoitingStatus{
+    // 2️⃣ ENUMS
+    enum VotingStatus {
         Closed,
         Open,
         Finished
     }
 
+    // 3️⃣ STRUCTS
     struct User {
         string userName;
         address userAddress;
         bool userCandidate;
         bool userAdmin;
-        uint256 voicesCount;
+        uint256 votesCount;
     }
 
-    VoitingStatus public currentStatus;
-    mapping (address => bool) private isVoited;
-    mapping (address => User) private users;
-
+    // 4️⃣ STATE VARIABLES
+    VotingStatus public currentStatus;
+    mapping(address => bool) private hasVoted;
+    mapping(address => User) private users;
     address[] public candidates;
-    address public curretnLider;
+    address public currentLeader;
     uint256 public maxVotes;
 
+    // 5️⃣ MODIFIERS
     modifier onlyAdmin() {
         require(users[msg.sender].userAdmin, "Not admin");
         _;
     }
 
+    // 6️⃣ CONSTRUCTOR
     constructor() {
         users[msg.sender] = User("admin", msg.sender, false, true, 0);
-        currentStatus = VoitingStatus.Closed;
+        currentStatus = VotingStatus.Closed;
         emit AdminRegistered(msg.sender);
     }
 
-
-    function changeStatus(VoitingStatus _newStatus) external onlyAdmin {
+    // 7️⃣ PUBLIC/EXTERNAL FUNCTIONS
+    function changeStatus(VotingStatus _newStatus) external onlyAdmin {
         require(_newStatus != currentStatus, "This status already set");
         currentStatus = _newStatus;
         emit StatusChanged(currentStatus, msg.sender);
     }
 
     function registerCandidate(string memory _name) external {
-        require(currentStatus == VoitingStatus.Closed, "Imposible to add candidate during voiting");
-        require(!users[msg.sender].userCandidate, "You have been already registered");
+        require(currentStatus == VotingStatus.Closed, "Cannot add candidate during voting");
+        require(!users[msg.sender].userCandidate, "Already registered as candidate");
 
         users[msg.sender] = User(_name, msg.sender, true, false, 0);
         candidates.push(msg.sender);
@@ -59,24 +64,24 @@ contract VoitingLogic {
     }
 
     function vote(address _candidate) external {
-        require(currentStatus == VoitingStatus.Open, "Voting closed");
+        require(currentStatus == VotingStatus.Open, "Voting is not open");
         require(users[_candidate].userCandidate, "Not a candidate");
-        require(!isVoited[msg.sender], "You have been voited already");
+        require(!hasVoted[msg.sender], "Already voted");
 
-        users[_candidate].voicesCount++;
-        isVoited[msg.sender] = true;
+        users[_candidate].votesCount++;
+        hasVoted[msg.sender] = true;
 
-        if (users[_candidate].voicesCount > maxVotes) {
-            maxVotes = users[_candidate].voicesCount;
-            curretnLider = _candidate;
+        if (users[_candidate].votesCount > maxVotes) {
+            maxVotes = users[_candidate].votesCount;
+            currentLeader = _candidate;
         }
 
-        emit Voted(msg.sender, _candidate, users[_candidate].voicesCount);
+        emit Voted(msg.sender, _candidate, users[_candidate].votesCount);
     }
 
     function getWinner() external view returns (User memory) {
-        require(curretnLider != address(0), "No votes yet");
-        return users[curretnLider];
+        require(currentLeader != address(0), "No votes yet");
+        return users[currentLeader];
     }
 
     function getCandidate(address _candidate) external view returns (User memory) {
@@ -101,8 +106,7 @@ contract VoitingLogic {
         return candidates[_index];
     }
 
-    function hasVoited(address _user) external view returns (bool) {
-        return isVoited[_user];
+    function hasUserVoted(address _user) external view returns (bool) {
+        return hasVoted[_user];
     }
-    
 }

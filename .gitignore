@@ -1,47 +1,20 @@
-node_modules/
-package-lock.json
-yarn.lock
+# Node modules
+/node_modules
 
-cache/
-artifacts/
-typechain/
-typechain-types/
+# Compilation output
+/dist
 
-build/
+# pnpm deploy output
+/bundle
 
-out/
-cache_hardhat/
+# Hardhat Build Artifacts
+/artifacts
 
-*.abi
-*.bin
+# Hardhat compilation (v2) support directory
+/cache
 
-.env
-.env.local
-.secret
-secrets.json
-mnemonic.txt
-privateKey.txt
+# Typechain output
+/types
 
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-.DS_Store
-Thumbs.db
-
-coverage/
-coverage.json
-.coverage_artifacts/
-.coverage_cache/
-.coverage_contracts/
-
-*.log
-logs/
-
-*.tmp
-.cache/
-
-deployments/localhost/
-deployments/hardhat/
+# Hardhat coverage reports
+/coverage

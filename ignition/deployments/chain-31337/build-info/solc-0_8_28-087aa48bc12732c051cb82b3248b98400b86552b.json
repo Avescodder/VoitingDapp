@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-087aa48bc12732c051cb82b3248b98400b86552b",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/VotingLogic.sol": "project/contracts/VotingLogic.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/VotingLogic.sol": {
+        "content": "//SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract VotingLogic {\n\n    // 1️⃣ EVENTS\n    event StatusChanged(VotingStatus newStatus, address whoChanged);\n    event Voted(address voter, address candidate, uint256 newVoteCount);\n    event CandidateRegistered(address candidateAddress, string name);\n    event AdminRegistered(address adminAddress);\n\n    // 2️⃣ ENUMS\n    enum VotingStatus {\n        Closed,\n        Open,\n        Finished\n    }\n\n    // 3️⃣ STRUCTS\n    struct User {\n        string userName;\n        address userAddress;\n        bool userCandidate;\n        bool userAdmin;\n        uint256 votesCount;\n    }\n\n    // 4️⃣ STATE VARIABLES\n    VotingStatus public currentStatus;\n    mapping(address => bool) private hasVoted;\n    mapping(address => User) private users;\n    address[] public candidates;\n    address public currentLeader;\n    uint256 public maxVotes;\n\n    // 5️⃣ MODIFIERS\n    modifier onlyAdmin() {\n        require(users[msg.sender].userAdmin, \"Not admin\");\n        _;\n    }\n\n    // 6️⃣ CONSTRUCTOR\n    constructor() {\n        users[msg.sender] = User(\"admin\", msg.sender, false, true, 0);\n        currentStatus = VotingStatus.Closed;\n        emit AdminRegistered(msg.sender);\n    }\n\n    // 7️⃣ PUBLIC/EXTERNAL FUNCTIONS\n    function changeStatus(VotingStatus _newStatus) external onlyAdmin {\n        require(_newStatus != currentStatus, \"This status already set\");\n        currentStatus = _newStatus;\n        emit StatusChanged(currentStatus, msg.sender);\n    }\n\n    function registerCandidate(string memory _name) external {\n        require(currentStatus == VotingStatus.Closed, \"Cannot add candidate during voting\");\n        require(!users[msg.sender].userCandidate, \"Already registered as candidate\");\n\n        users[msg.sender] = User(_name, msg.sender, true, false, 0);\n        candidates.push(msg.sender);\n\n        emit CandidateRegistered(msg.sender, _name);\n    }\n\n    function vote(address _candidate) external {\n        require(currentStatus == VotingStatus.Open, \"Voting is not open\");\n        require(users[_candidate].userCandidate, \"Not a candidate\");\n        require(!hasVoted[msg.sender], \"Already voted\");\n\n        users[_candidate].votesCount++;\n        hasVoted[msg.sender] = true;\n\n        if (users[_candidate].votesCount > maxVotes) {\n            maxVotes = users[_candidate].votesCount;\n            currentLeader = _candidate;\n        }\n\n        emit Voted(msg.sender, _candidate, users[_candidate].votesCount);\n    }\n\n    function getWinner() external view returns (User memory) {\n        require(currentLeader != address(0), \"No votes yet\");\n        return users[currentLeader];\n    }\n\n    function getCandidate(address _candidate) external view returns (User memory) {\n        require(users[_candidate].userCandidate, \"User not a candidate\");\n        return users[_candidate];\n    }\n\n    function getAllResults() external view onlyAdmin returns (User[] memory) {\n        User[] memory results = new User[](candidates.length);\n        for (uint256 i = 0; i < candidates.length; i++) {\n            results[i] = users[candidates[i]];\n        }\n        return results;\n    }\n\n    function getCandidateLength() external view returns (uint256) {\n        return candidates.length;\n    }\n\n    function getCandidateAddress(uint256 _index) external view returns (address) {\n        require(_index < candidates.length, \"Index out of range\");\n        return candidates[_index];\n    }\n\n    function hasUserVoted(address _user) external view returns (bool) {\n        return hasVoted[_user];\n    }\n}"
+      }
+    }
+  }
+}
