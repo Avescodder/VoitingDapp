@@ -18,3 +18,8 @@
 
 # Hardhat coverage reports
 /coverage
+
+.env
+
+/Security.Checklist.txt
+
