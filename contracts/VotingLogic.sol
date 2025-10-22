@@ -3,6 +3,17 @@ pragma solidity ^0.8.0;
 
 contract VotingLogic {
 
+    error NotAdmin();
+    error StatusAlreadySet();
+    error VotingNotClosed();
+    error AlreadyCandidate();
+    error VotingNotOpen();
+    error NotACandidate();
+    error AlreadyVoted();
+    error NoVotesYet();
+    error UserNotCandidate();
+    error IndexOutOfRange();
+
     // 1️⃣ EVENTS
     event StatusChanged(VotingStatus newStatus, address whoChanged);
     event Voted(address voter, address candidate, uint256 newVoteCount);
@@ -35,7 +46,7 @@ contract VotingLogic {
 
     // 5️⃣ MODIFIERS
     modifier onlyAdmin() {
-        require(users[msg.sender].userAdmin, "Not admin");
+        if (users[msg.sender].userAdmin) revert NotAdmin();
         _;
     }
 
@@ -48,14 +59,14 @@ contract VotingLogic {
 
     // 7️⃣ PUBLIC/EXTERNAL FUNCTIONS
     function changeStatus(VotingStatus _newStatus) external onlyAdmin {
-        require(_newStatus != currentStatus, "This status already set");
+        if (_newStatus == currentStatus) revert StatusAlreadySet();
         currentStatus = _newStatus;
         emit StatusChanged(currentStatus, msg.sender);
     }
 
     function registerCandidate(string memory _name) external {
-        require(currentStatus == VotingStatus.Closed, "Cannot add candidate during voting");
-        require(!users[msg.sender].userCandidate, "Already registered as candidate");
+        if (currentStatus == VotingStatus.Closed) revert VotingNotClosed();
+        if (!users[msg.sender].userCandidate) revert AlreadyCandidate();
 
         users[msg.sender] = User(_name, msg.sender, true, false, 0);
         candidates.push(msg.sender);
@@ -64,9 +75,9 @@ contract VotingLogic {
     }
 
     function vote(address _candidate) external {
-        require(currentStatus == VotingStatus.Open, "Voting is not open");
-        require(users[_candidate].userCandidate, "Not a candidate");
-        require(!hasVoted[msg.sender], "Already voted");
+        if (currentStatus == VotingStatus.Open) revert VotingNotOpen();
+        if (users[_candidate].userCandidate) revert NotACandidate();
+        if (!hasVoted[msg.sender]) revert AlreadyVoted();
 
         users[_candidate].votesCount++;
         hasVoted[msg.sender] = true;
@@ -80,12 +91,12 @@ contract VotingLogic {
     }
 
     function getWinner() external view returns (User memory) {
-        require(currentLeader != address(0), "No votes yet");
+        if (currentLeader != address(0)) revert NoVotesYet();
         return users[currentLeader];
     }
 
     function getCandidate(address _candidate) external view returns (User memory) {
-        require(users[_candidate].userCandidate, "User not a candidate");
+        if (users[_candidate].userCandidate) revert UserNotCandidate();
         return users[_candidate];
     }
 
@@ -102,7 +113,7 @@ contract VotingLogic {
     }
 
     function getCandidateAddress(uint256 _index) external view returns (address) {
-        require(_index < candidates.length, "Index out of range");
+        if (_index < candidates.length) revert IndexOutOfRange();
         return candidates[_index];
     }
 
